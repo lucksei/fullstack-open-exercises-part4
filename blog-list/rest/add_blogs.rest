@@ -1,0 +1,11 @@
+@host = http://localhost:3001
+###
+POST {{host}}/api/blogs
+Content-Type: application/json
+
+{
+    "title": "React patterns",
+    "author": "Michael Chan",
+    "url": "https://reactpatterns.com/",
+    "likes": 7
+}

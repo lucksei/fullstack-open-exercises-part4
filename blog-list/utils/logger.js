@@ -10,4 +10,4 @@ const debug = (...params) => {
     console.debug(...params)
 }
 
-MediaSourceHandle.exports = { info, error, debug }
+module.exports = { info, error, debug }
