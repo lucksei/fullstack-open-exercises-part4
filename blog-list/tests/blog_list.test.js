@@ -72,8 +72,29 @@ test('verify that the unique identifier is named id', async () => {
     const response = await api.get('/api/blogs')
     response.body.forEach((blog) => {
         // console.log(Object.keys(blog).includes("id"))
-        assert.strictEqual(Object.keys(blog).includes("id"), true)
+        assert(Object.keys(blog).includes("id"))
     })
+})
+
+test('verify that making a POST request to /api/blogs creates a new blog post', async () => {
+    const newBlog = {
+        title: "New test blog",
+        author: "D",
+        url: "https://localhost/",
+        likes: 999,
+    }
+
+    await api
+        .post('/api/blogs')
+        .send(newBlog)
+        .expect(201)
+        .expect("Content-Type", /application\/json/)
+    
+    const response = await api.get('/api/blogs')
+    const titles = response.body.map(b => b.title)
+
+    assert.strictEqual(response.body.length, initialBlogs.length + 1)
+    assert(titles.includes("New test blog"))
 })
 
 after(async () => {
