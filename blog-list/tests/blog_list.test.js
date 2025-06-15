@@ -4,6 +4,7 @@ const supertest = require('supertest')
 const assert = require('assert')
 const app = require('../app')
 const Blog = require('../models/blog')
+const _ = require('lodash')
 
 const api = supertest(app)
 
@@ -95,6 +96,26 @@ test('verify that making a POST request to /api/blogs creates a new blog post', 
 
     assert.strictEqual(response.body.length, initialBlogs.length + 1)
     assert(titles.includes("New test blog"))
+})
+
+test('verify that if the likes property is missing from the POST request, it will default to the valie 0', async () => {
+    const newBlog = {
+        title: "Missing likes property",
+        author: "D",
+        url: "https://localhost/",
+    }
+
+    await api
+        .post('/api/blogs')
+        .send(newBlog)
+        .expect(201)
+        .expect("Content-Type", /application\/json/)
+    
+    const response = await api.get('/api/blogs')
+    const lastBlogSaved = _.find(response.body, blog => blog.title === "Missing likes property")
+
+    assert(Object.keys(lastBlogSaved).includes("likes"))
+
 })
 
 after(async () => {
