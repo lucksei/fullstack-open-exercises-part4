@@ -98,7 +98,7 @@ test('verify that making a POST request to /api/blogs creates a new blog post', 
     assert(titles.includes("New test blog"))
 })
 
-test('verify that if the likes property is missing from the POST request, it will default to the valie 0', async () => {
+test('verify that if the "likes" property is missing from the POST request, it will default to the valie 0', async () => {
     const newBlog = {
         title: "Missing likes property",
         author: "D",
@@ -116,6 +116,32 @@ test('verify that if the likes property is missing from the POST request, it wil
 
     assert(Object.keys(lastBlogSaved).includes("likes"))
 
+})
+
+test('verify that if the "title" property is missing from the POST request, it will return with code 400', async () => {
+    const newBlog = {
+        author: "D",
+        url: "https://localhost/",
+        likes: 9,
+    }
+
+    await api
+        .post('/api/blogs')
+        .send(newBlog)
+        .expect(400)
+})
+
+test('verify that if the "url" property is missing from the POST request, it will return with code 400', async () => {
+    const newBlog = {
+        title: "Missing URL",
+        author: "D",
+        likes: 9,
+    }
+
+    await api
+        .post('/api/blogs')
+        .send(newBlog)
+        .expect(400)
 })
 
 after(async () => {
