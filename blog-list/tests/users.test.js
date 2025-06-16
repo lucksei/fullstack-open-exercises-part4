@@ -85,6 +85,32 @@ describe('when there is initially one user in db', () => {
 
       logger.info(response.body)
     })
+
+    test('Username is unique', async () => {
+      const newUser1 = {
+        username: "duplicateusertest",
+        name: "Duplicato Martinez",
+        password: "sameasiteverwas",
+      }
+
+      let response = await api
+        .post('/api/users')
+        .send(newUser1)
+        .expect(201)
+      logger.info(response.body)
+
+      const newUser2 = {
+        username: "duplicateusertest",
+        name: "Duplicata Martinez",
+        password: "sameasiteverwas",
+      }
+
+      response = await api
+        .post('/api/users')
+        .send(newUser2)
+        .expect(400)
+      logger.info(response.body)
+    })
   })
 
   describe('password validation', () => {
@@ -104,7 +130,7 @@ describe('when there is initially one user in db', () => {
 
     test('Create an user with a password less than 3 characters long', async () => {
       const newUser = {
-        username: 'wizardo',
+        username: 'wizardo2',
         name: 'Evilio Wizardio',
         password: 'ew',
       }
