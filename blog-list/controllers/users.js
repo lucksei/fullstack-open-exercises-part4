@@ -5,24 +5,32 @@ const logger = require('./../utils/logger')
 const { request } = require('express')
 
 usersRouter.get('/', async (request, response, next) => {
-    const users = await User.find({})
-    response.json(users)
+  const users = await User.find({})
+  response.json(users)
 })
 usersRouter.post('/', async (request, response, next) => {
-    const { username, name, password } = request.body
+  const { username, name, password } = request.body
 
-    const saltRounds = 10
-    const passwordHash = await bcrypt.hash(password, saltRounds)
+  if (!password) {
+    response.status(400).json({ error: '"password" is required' })
+  }
 
-    const user = new User({
-        username: username,
-        name: name,
-        passwordHash: passwordHash,
-    })
+  if (password.length <= 3) {
+    response.status(400).json({ error: "password must be at least 3 characters long" })
+  }
 
-    const savedUser = await user.save()
+  const saltRounds = 10
+  const passwordHash = await bcrypt.hash(password, saltRounds)
 
-    response.status(201).json(savedUser)
+  const user = new User({
+    username: username,
+    name: name,
+    passwordHash: passwordHash,
+  })
+
+  const savedUser = await user.save()
+
+  response.status(201).json(savedUser)
 })
 
 module.exports = usersRouter

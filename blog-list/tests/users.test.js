@@ -9,6 +9,7 @@ const Blog = require('../models/blog')
 const helpers = require('./helpers')
 const _ = require('lodash')
 const User = require('../models/user')
+const logger = require('./../utils/logger')
 
 const api = supertest(app)
 
@@ -53,6 +54,68 @@ describe('when there is initially one user in db', () => {
     const foundUser = _.find(usersAtEnd, user => user.username === "pperez")
     assert(foundUser)
     console.log(usersAtEnd)
+  })
+
+  describe('username validation', () => {
+    test('Create an user without an username', async () => {
+      const newUser = {
+        name: 'Evil wizard',
+        password: 'evilstuff123',
+      }
+
+      const response = await api
+        .post('/api/users')
+        .send(newUser)
+        .expect(400)
+
+      logger.info(response.body)
+    })
+
+    test('Create an user with username below 3 characters long', async () => {
+      const newUser = {
+        username: 'ew',
+        name: 'Evil wizz',
+        password: 'evilstuff123'
+      }
+
+      const response = await api
+        .post('/api/users')
+        .send(newUser)
+        .expect(400)
+
+      logger.info(response.body)
+    })
+  })
+
+  describe('password validation', () => {
+    test('Create an user without a password', async () => {
+      const newUser = {
+        username: 'wizardo',
+        name: 'Evilio Wizardio',
+      }
+
+      const response = await api
+        .post('/api/users')
+        .send(newUser)
+        .expect(400)
+
+      logger.info(response.body)
+    })
+
+    test('Create an user with a password less than 3 characters long', async () => {
+      const newUser = {
+        username: 'wizardo',
+        name: 'Evilio Wizardio',
+        password: 'ew',
+      }
+
+      const response = await api
+        .post('/api/users')
+        .send(newUser)
+        .expect(400)
+
+      logger.info(response.body)
+    })
   })
 })
 
