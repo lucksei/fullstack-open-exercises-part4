@@ -2,8 +2,11 @@ const { test, after, beforeEach, describe } = require('node:test')
 const mongoose = require('mongoose')
 const supertest = require('supertest')
 const assert = require('assert')
+const bcrypt = require('bcrypt')
+
 const app = require('../app')
 const Blog = require('../models/blog')
+const User = require('../models/user')
 const helpers = require('./helpers')
 const _ = require('lodash')
 
@@ -12,10 +15,17 @@ const api = supertest(app)
 // The database is cleared out at the beginning, after that we save
 // two blogs stored in the helpers.initialBlogs array to the database.
 beforeEach(async () => {
+  // Reset the blogs 
   await Blog.deleteMany({})
   const blogObjects = helpers.initialBlogs.map(blog => new Blog(blog))
   const promiseArray = blogObjects.map(blog => blog.save())
   await Promise.all(promiseArray)
+
+  // Reset the users
+  await User.deleteMany({})
+  const passwordHash = await bcrypt.hash('sekret', 10)
+  const user = new User({ username: 'root', passwordHash })
+  await user.save()
 })
 
 describe('GET operations on /api/blogs', () => {

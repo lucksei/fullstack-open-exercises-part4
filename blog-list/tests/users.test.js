@@ -15,11 +15,16 @@ const api = supertest(app)
 
 describe('when there is initially one user in db', () => {
   beforeEach(async () => {
-    await User.deleteMany({})
+    // Reset the blogs 
+    await Blog.deleteMany({})
+    const blogObjects = helpers.initialBlogs.map(blog => new Blog(blog))
+    const promiseArray = blogObjects.map(blog => blog.save())
+    await Promise.all(promiseArray)
 
+    // Reset the users
+    await User.deleteMany({})
     const passwordHash = await bcrypt.hash('sekret', 10)
     const user = new User({ username: 'root', passwordHash })
-
     await user.save()
   })
 
@@ -67,8 +72,6 @@ describe('when there is initially one user in db', () => {
         .post('/api/users')
         .send(newUser)
         .expect(400)
-
-      logger.info(response.body)
     })
 
     test('Create an user with username below 3 characters long', async () => {
@@ -82,8 +85,6 @@ describe('when there is initially one user in db', () => {
         .post('/api/users')
         .send(newUser)
         .expect(400)
-
-      logger.info(response.body)
     })
 
     test('Username is unique', async () => {
@@ -97,7 +98,6 @@ describe('when there is initially one user in db', () => {
         .post('/api/users')
         .send(newUser1)
         .expect(201)
-      logger.info(response.body)
 
       const newUser2 = {
         username: "duplicateusertest",
@@ -109,7 +109,6 @@ describe('when there is initially one user in db', () => {
         .post('/api/users')
         .send(newUser2)
         .expect(400)
-      logger.info(response.body)
     })
   })
 
@@ -124,8 +123,6 @@ describe('when there is initially one user in db', () => {
         .post('/api/users')
         .send(newUser)
         .expect(400)
-
-      logger.info(response.body)
     })
 
     test('Create an user with a password less than 3 characters long', async () => {
@@ -139,8 +136,6 @@ describe('when there is initially one user in db', () => {
         .post('/api/users')
         .send(newUser)
         .expect(400)
-
-      logger.info(response.body)
     })
   })
 })

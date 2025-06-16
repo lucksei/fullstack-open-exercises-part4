@@ -1,0 +1,4 @@
+
+@host = http://localhost:3001
+###
+GET {{host}}/api/users
