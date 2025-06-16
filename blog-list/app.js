@@ -12,6 +12,7 @@ const middleware = require('./utils/middleware')
 // Routers
 const blogsRouter = require('./controllers/blogs')
 const usersRouter = require('./controllers/users')
+const loginRouter = require('./controllers/login')
 
 const app = express()
 
@@ -27,6 +28,7 @@ app.use(middleware.morganLogger) // Add middleware for logging
 
 app.use('/api/blogs', blogsRouter) // Add route for blogs controllers
 app.use('/api/users', usersRouter) // Add route for users controllers
+app.use('/api/login', loginRouter) // Add route for login controllers
 
 app.use(middleware.unknownEndpoint) // Middleware for unknown endpoint
 app.use(middleware.errorHandler) // Middleware for error handling
