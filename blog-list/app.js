@@ -1,10 +1,17 @@
 const express = require('express')
 const cors = require('cors')
 const mongoose = require('mongoose')
+
+// Helpers
 const config = require('./utils/config')
 const logger = require('./utils/logger')
+
+// Custom middleware
 const middleware = require('./utils/middleware')
+
+// Routers
 const blogsRouter = require('./controllers/blogs')
+const usersRouter = require('./controllers/users')
 
 const app = express()
 
@@ -19,6 +26,7 @@ app.use(express.json()) // Add middleware to parse the body of the request
 app.use(middleware.morganLogger) // Add middleware for logging
 
 app.use('/api/blogs', blogsRouter) // Add route for blogs controllers
+app.use('/api/users', usersRouter) // Add route for users controllers
 
 app.use(middleware.unknownEndpoint) // Middleware for unknown endpoint
 app.use(middleware.errorHandler) // Middleware for error handling

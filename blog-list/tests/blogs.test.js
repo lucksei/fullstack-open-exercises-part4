@@ -4,54 +4,16 @@ const supertest = require('supertest')
 const assert = require('assert')
 const app = require('../app')
 const Blog = require('../models/blog')
+const helpers = require('./helpers')
 const _ = require('lodash')
 
 const api = supertest(app)
 
-const initialBlogs = [
-  {
-    title: "React patterns",
-    author: "Michael Chan",
-    url: "https://reactpatterns.com/",
-    likes: 7,
-  },
-  {
-    title: "Go To Statement Considered Harmful",
-    author: "Edsger W. Dijkstra",
-    url: "http://www.u.arizona.edu/~rubinson/copyright_violations/Go_To_Considered_Harmful.html",
-    likes: 5,
-  },
-  {
-    title: "Canonical string reduction",
-    author: "Edsger W. Dijkstra",
-    url: "http://www.cs.utexas.edu/~EWD/transcriptions/EWD08xx/EWD808.html",
-    likes: 12,
-  },
-  {
-    title: "First class tests",
-    author: "Robert C. Martin",
-    url: "http://blog.cleancoder.com/uncle-bob/2017/05/05/TestDefinitions.htmll",
-    likes: 10,
-  },
-  {
-    title: "TDD harms architecture",
-    author: "Robert C. Martin",
-    url: "http://blog.cleancoder.com/uncle-bob/2017/03/03/TDD-Harms-Architecture.html",
-    likes: 0,
-  },
-  {
-    title: "Type wars",
-    author: "Robert C. Martin",
-    url: "http://blog.cleancoder.com/uncle-bob/2016/05/01/TypeWars.html",
-    likes: 2,
-  }
-]
-
 // The database is cleared out at the beginning, after that we save
-// two blogs stored in the initialBlogs array to the database.
+// two blogs stored in the helpers.initialBlogs array to the database.
 beforeEach(async () => {
   await Blog.deleteMany({})
-  const blogObjects = initialBlogs.map(blog => new Blog(blog))
+  const blogObjects = helpers.initialBlogs.map(blog => new Blog(blog))
   const promiseArray = blogObjects.map(blog => blog.save())
   await Promise.all(promiseArray)
 })
@@ -67,7 +29,7 @@ describe('GET operations on /api/blogs', () => {
   test('all blogs are returned', async () => {
     const response = await api.get('/api/blogs')
 
-    assert.strictEqual(response.body.length, initialBlogs.length)
+    assert.strictEqual(response.body.length, helpers.initialBlogs.length)
   })
 
   test('verify that the unique identifier is named id', async () => {
@@ -97,7 +59,7 @@ describe('POST operations on /api/blogs', () => {
     const response = await api.get('/api/blogs')
     const titles = response.body.map(b => b.title)
 
-    assert.strictEqual(response.body.length, initialBlogs.length + 1)
+    assert.strictEqual(response.body.length, helpers.initialBlogs.length + 1)
     assert(titles.includes("New test blog"))
   })
 
