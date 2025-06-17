@@ -25,6 +25,7 @@ mongoose.connect(config.MONGODB_URI)
 app.use(cors()) // Add middleware for cors
 app.use(express.json()) // Add middleware to parse the body of the request
 app.use(middleware.morganLogger) // Add middleware for logging
+app.use(middleware.tokenExtractor) // Middleware for token extraction
 
 app.use('/api/blogs', blogsRouter) // Add route for blogs controllers
 app.use('/api/users', usersRouter) // Add route for users controllers
