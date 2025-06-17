@@ -9,8 +9,10 @@ const Blog = require('../models/blog')
 const User = require('../models/user')
 const helpers = require('./helpers')
 const _ = require('lodash')
+const jwt = require('jsonwebtoken')
 
 const api = supertest(app)
+
 
 // The database is cleared out at the beginning, after that we save
 // two blogs stored in the helpers.initialBlogs array to the database.
@@ -26,6 +28,10 @@ beforeEach(async () => {
   const passwordHash = await bcrypt.hash('sekret', 10)
   const user = new User({ username: 'root', passwordHash })
   await user.save()
+
+  // Generate a token to test out the app
+  const newUser = await User.findOne({ username: 'root' })
+  const testToken = jwt.sign(newUser.toJSON(), process.env.SECRET)
 })
 
 describe('GET operations on /api/blogs', () => {
@@ -62,6 +68,7 @@ describe('POST operations on /api/blogs', () => {
 
     await api
       .post('/api/blogs')
+      .
       .send(newBlog)
       .expect(201)
       .expect("Content-Type", /application\/json/)
