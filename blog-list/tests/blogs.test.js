@@ -13,7 +13,6 @@ const jwt = require('jsonwebtoken')
 
 const api = supertest(app)
 
-
 // The database is cleared out at the beginning, after that we save
 // two blogs stored in the helpers.initialBlogs array to the database.
 beforeEach(async () => {
@@ -28,10 +27,6 @@ beforeEach(async () => {
   const passwordHash = await bcrypt.hash('sekret', 10)
   const user = new User({ username: 'root', passwordHash })
   await user.save()
-
-  // Generate a token to test out the app
-  const newUser = await User.findOne({ username: 'root' })
-  const testToken = jwt.sign(newUser.toJSON(), process.env.SECRET)
 })
 
 describe('GET operations on /api/blogs', () => {
@@ -57,8 +52,15 @@ describe('GET operations on /api/blogs', () => {
   })
 })
 
-describe('POST operations on /api/blogs', () => {
-  test('verify that making a POST request to /api/blogs creates a new blog post', async () => {
+describe('POST operations on /api/blogs', async () => {
+  // Generate a token to test out the app
+  let testToken = ''
+  beforeEach(async () => {
+    const newUser = await User.findOne({ username: 'root' })
+    testToken = jwt.sign(newUser.toJSON(), process.env.SECRET)
+  })
+
+  test('making a POST request without the Authorization header returns code 401', async () => {
     const newBlog = {
       title: "New test blog",
       author: "D",
@@ -68,8 +70,39 @@ describe('POST operations on /api/blogs', () => {
 
     await api
       .post('/api/blogs')
-      .
       .send(newBlog)
+      .expect(401)
+      .expect("Content-Type", /application\/json/)
+  })
+
+  test('making a POST request with a non-valid Authorization header returns code 401', async () => {
+    const newBlog = {
+      title: "New test blog",
+      author: "D",
+      url: "https://localhost/",
+      likes: 999,
+    }
+
+    await api
+      .post('/api/blogs')
+      .send(newBlog)
+      .set('Authorization', 'Bearer wrongtokenhere')
+      .expect(401)
+      .expect("Content-Type", /application\/json/)
+  })
+
+  test('making a POST request to /api/blogs creates a new blog post', async () => {
+    const newBlog = {
+      title: "New test blog",
+      author: "D",
+      url: "https://localhost/",
+      likes: 999,
+    }
+
+    await api
+      .post('/api/blogs')
+      .send(newBlog)
+      .set('Authorization', `Bearer ${testToken}`)
       .expect(201)
       .expect("Content-Type", /application\/json/)
 
@@ -90,6 +123,7 @@ describe('POST operations on /api/blogs', () => {
     await api
       .post('/api/blogs')
       .send(newBlog)
+      .set('Authorization', `Bearer ${testToken}`)
       .expect(201)
       .expect("Content-Type", /application\/json/)
 
@@ -110,6 +144,7 @@ describe('POST operations on /api/blogs', () => {
     await api
       .post('/api/blogs')
       .send(newBlog)
+      .set('Authorization', `Bearer ${testToken}`)
       .expect(400)
   })
 
@@ -123,6 +158,7 @@ describe('POST operations on /api/blogs', () => {
     await api
       .post('/api/blogs')
       .send(newBlog)
+      .set('Authorization', `Bearer ${testToken}`)
       .expect(400)
   })
 })
@@ -166,7 +202,6 @@ describe('UPDATE operations on /api/blogs', () => {
   })
 })
 
-test()
 after(async () => {
   await mongoose.connection.close()
 })
