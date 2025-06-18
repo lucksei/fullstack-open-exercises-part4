@@ -27,7 +27,7 @@ app.use(express.json()) // Add middleware to parse the body of the request
 app.use(middleware.morganLogger) // Add middleware for logging
 app.use(middleware.tokenExtractor) // Middleware for token extraction
 
-app.use('/api/blogs', blogsRouter) // Add route for blogs controllers
+app.use('/api/blogs', middleware.userExtractor, blogsRouter) // Add route for blogs controllers (includes the userExtractor middleware too)
 app.use('/api/users', usersRouter) // Add route for users controllers
 app.use('/api/login', loginRouter) // Add route for login controllers
 

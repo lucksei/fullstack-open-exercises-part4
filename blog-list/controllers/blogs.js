@@ -19,14 +19,14 @@ blogsRouter.get('/', async (request, response, next) => {
 })
 
 blogsRouter.post('/', async (request, response, next) => {
-  const decodedToken = jwt.verify(request.token, process.env.SECRET)
-  if (!decodedToken.id) {
-    return response.status(401).json({ error: "token invalid" })
-  }
-  const user = await User.findById(decodedToken.id)
+  // const decodedToken = jwt.verify(request.token, process.env.SECRET)
+  // if (!decodedToken.id) {
+  //   return response.status(401).json({ error: "token invalid" })
+  // }
+  // const user = await User.findById(decodedToken.id)
 
-  if (!user) {
-    return response.status(500).json({ error: 'user missing or not valid' })
+  if (!request.user) {
+    return response.status(401).json({ error: 'user missing or not valid' })
   }
 
   const blog = new Blog({
@@ -34,13 +34,13 @@ blogsRouter.post('/', async (request, response, next) => {
     author: request.body.author,
     url: request.body.url,
     likes: request.body.likes,
-    user: user._id,
+    user: request.user._id,
   })
 
   try {
     const savedBlog = await blog.save()
-    user.blogs = user.blogs.concat(savedBlog._id)
-    await user.save()
+    request.user.blogs = request.user.blogs.concat(savedBlog._id)
+    await request.user.save()
     response.status(201).json(savedBlog)
   } catch (exeption) {
     next(exeption)
@@ -50,14 +50,18 @@ blogsRouter.post('/', async (request, response, next) => {
 blogsRouter.delete('/:blogId', async (request, response, next) => {
   const { blogId } = request.params
 
-  const decodedToken = jwt.verify(request.token, process.env.SECRET)
-  if (!decodedToken.id) {
-    return response.status(401).json({ error: "token invalid" })
+  // const decodedToken = jwt.verify(request.token, process.env.SECRET)
+  // if (!decodedToken.id) {
+  //   return response.status(401).json({ error: "token invalid" })
+  // }
+
+  if (!request.user) {
+    return response.status(401).json({ error: 'user missing or not valid' })
   }
 
   try {
     const blogToDelete = await Blog.findById(blogId)
-    if (decodedToken.id !== blogToDelete.toJSON().user.toString()) {
+    if (request.user._id.toString() !== blogToDelete.toJSON().user.toString()) {
       return response.status(401).json({ error: "cannot delete another user's note" })
     }
 
