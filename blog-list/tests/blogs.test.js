@@ -13,20 +13,25 @@ const jwt = require('jsonwebtoken')
 
 const api = supertest(app)
 
-// The database is cleared out at the beginning, after that we save
-// two blogs stored in the helpers.initialBlogs array to the database.
+// The database is cleared out at the beginning, after that we initialize it with some dummy data for the tests 
 beforeEach(async () => {
-  // Reset the blogs 
-  await Blog.deleteMany({})
-  const blogObjects = helpers.initialBlogs.map(blog => new Blog(blog))
-  const promiseArray = blogObjects.map(blog => blog.save())
-  await Promise.all(promiseArray)
-
   // Reset the users
   await User.deleteMany({})
   const passwordHash = await bcrypt.hash('sekret', 10)
   const user = new User({ username: 'root', passwordHash })
   await user.save()
+
+  // Reset the blogs 
+  await Blog.deleteMany({})
+  const blogObjects = helpers.initialBlogs.map(blog => new Blog({
+    title: blog.title,
+    author: blog.author,
+    url: blog.url,
+    likes: blog.likes,
+    user: user._id,
+  }))
+  const promiseArray = blogObjects.map(blog => blog.save())
+  await Promise.all(promiseArray)
 })
 
 describe('GET operations on /api/blogs', () => {
@@ -51,6 +56,7 @@ describe('GET operations on /api/blogs', () => {
     })
   })
 })
+
 
 describe('POST operations on /api/blogs', async () => {
   // Generate a token to test out the app
@@ -164,20 +170,62 @@ describe('POST operations on /api/blogs', async () => {
 })
 
 describe('DELETE operations on /api/blogs', () => {
-  test('verify that deleting a blog results in code 204 and the blog no longer exists', async () => {
+  // Generate a token to test out the app
+  let testToken = ''
+  beforeEach(async () => {
+    // Load token into testToken var
+    const newUser = await User.findOne({ username: 'root' })
+    testToken = jwt.sign(newUser.toJSON(), process.env.SECRET)
+
+    // Create a dummy blog in the database with the new user's id
+    const newBlog = new Blog({
+      title: "Cool blog, totally not for deleting later",
+      author: "A special person",
+      url: "https://localhost.com/",
+      likes: 0,
+      user: newUser._id,
+    })
+    await newBlog.save()
+  })
+
+  test('deleting a blog without the authorization header results in error 401', async () => {
     let response = await api
       .get('/api/blogs')
       .expect(200)
 
-    const blogToDelete = _.find(response.body, blog => blog.title === "Go To Statement Considered Harmful")
+    const blogToDelete = _.find(response.body, blog => blog.title === "Cool blog, totally not for deleting later")
     await api
       .delete(`/api/blogs/${blogToDelete.id}`)
+      .expect(401)
+  })
+
+  test('deleting a blog with a malformed authorization results in code 401', async () => {
+    let response = await api
+      .get('/api/blogs')
+      .expect(200)
+
+    const blogToDelete = _.find(response.body, blog => blog.title === "Cool blog, totally not for deleting later")
+    await api
+      .delete(`/api/blogs/${blogToDelete.id}`)
+      .set('Authorization', 'Bearer malformedtoken')
+      .expect(401)
+  })
+
+  test('deleting a blog results in code 204 and the blog no longer exists', async () => {
+    let response = await api
+      .get('/api/blogs')
+      .expect(200)
+
+    const blogToDelete = _.find(response.body, blog => blog.title === "Cool blog, totally not for deleting later")
+    await api
+      .delete(`/api/blogs/${blogToDelete.id}`)
+      .set('Authorization', `Bearer ${testToken}`)
       .expect(204)
 
     response = await api
       .get('/api/blogs')
       .expect(200)
-    const blogDeleted = _.find(response.body, blog => blog.title === "Go To Statement Considered Harmful")
+    const blogDeleted = _.find(response.body, blog => blog.title === "Cool blog, totally not for deleting later")
     assert(!blogDeleted)
   })
 })

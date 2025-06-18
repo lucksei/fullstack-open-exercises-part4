@@ -14,18 +14,25 @@ const logger = require('./../utils/logger')
 const api = supertest(app)
 
 describe('when there is initially one user in db', () => {
+  // The database is cleared out at the beginning, after that we initialize it with some dummy data for the tests 
   beforeEach(async () => {
-    // Reset the blogs 
-    await Blog.deleteMany({})
-    const blogObjects = helpers.initialBlogs.map(blog => new Blog(blog))
-    const promiseArray = blogObjects.map(blog => blog.save())
-    await Promise.all(promiseArray)
-
     // Reset the users
     await User.deleteMany({})
     const passwordHash = await bcrypt.hash('sekret', 10)
     const user = new User({ username: 'root', passwordHash })
     await user.save()
+
+    // Reset the blogs 
+    await Blog.deleteMany({})
+    const blogObjects = helpers.initialBlogs.map(blog => new Blog({
+      title: blog.title,
+      author: blog.author,
+      url: blog.url,
+      likes: blog.likes,
+      user: user._id,
+    }))
+    const promiseArray = blogObjects.map(blog => blog.save())
+    await Promise.all(promiseArray)
   })
 
   test('users are returned as json', async () => {
